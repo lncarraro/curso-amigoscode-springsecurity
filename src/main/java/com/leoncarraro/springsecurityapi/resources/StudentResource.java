@@ -15,17 +15,16 @@ import com.leoncarraro.springsecurityapi.models.Student;
 public class StudentResource {
 
 	private static final List<Student> STUDENTS = Arrays.asList(
-			new Student(1L, "James Bond"),
-			new Student(2L, "Maria Jones"),
-			new Student(3L, "Ana Smith")
-	);
+		new Student(1L, "James Bond"),
+		new Student(2L, "Maria Jones"),
+		new Student(3L, "Ana Smith"));
 	
 	@RequestMapping(method = RequestMethod.GET, value = "/{studentId}")
 	public Student getStudent(@PathVariable Long studentId) {
 		return STUDENTS.stream()
-				.filter(s -> s.getId().equals(studentId))
-				.findFirst()
-				.orElseThrow(() -> new IllegalArgumentException("Student with ID " + studentId + " does not exists!"));
+			.filter(s -> s.getId().equals(studentId))
+			.findFirst()
+			.orElseThrow(() -> new IllegalArgumentException("Student with ID " + studentId + " does not exists!"));
 	}
 	
 }
