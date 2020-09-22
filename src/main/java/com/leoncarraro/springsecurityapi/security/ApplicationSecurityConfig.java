@@ -3,6 +3,7 @@ package com.leoncarraro.springsecurityapi.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -21,9 +22,14 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 	
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
-		http.authorizeRequests()
+		http.csrf().disable()
+			.authorizeRequests()
 			.antMatchers("/", "index", "/css/*", "/js/*").permitAll()
 			.antMatchers("/api/**").hasRole(ApplicationUserRole.STUDENT.name())
+			.antMatchers(HttpMethod.POST, "/management/api/**").hasAuthority(ApplicationUserPermission.COURSE_WRITE.getPermission())
+			.antMatchers(HttpMethod.PUT, "/management/api/**").hasAuthority(ApplicationUserPermission.COURSE_WRITE.getPermission())
+			.antMatchers(HttpMethod.DELETE, "/management/api/**").hasAuthority(ApplicationUserPermission.COURSE_WRITE.getPermission())
+			.antMatchers(HttpMethod.GET, "/management/api/**").hasAnyRole(ApplicationUserRole.ADMIN.name(), ApplicationUserRole.ADMINTRAINEE.name())
 			.anyRequest()
 			.authenticated()
 			.and()
@@ -36,16 +42,25 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 		UserDetails annaSmithUser = User.builder()
 			.username("annasmith")
 			.password(passwordEncoder.encode("password"))
-			.roles(ApplicationUserRole.STUDENT.name())
+//			.roles(ApplicationUserRole.STUDENT.name())
+			.authorities(ApplicationUserRole.STUDENT.getGrantedAuthorities())
 			.build();
 		
 		UserDetails lindaUser = User.builder()
 			.username("linda")
 			.password(passwordEncoder.encode("admin"))
-			.roles(ApplicationUserRole.ADMIN.name())
+//			.roles(ApplicationUserRole.ADMIN.name())
+			.authorities(ApplicationUserRole.ADMIN.getGrantedAuthorities())
 			.build();
 		
-		return new InMemoryUserDetailsManager(annaSmithUser, lindaUser);
+		UserDetails tomUser = User.builder()
+			.username("tom")
+			.password(passwordEncoder.encode("admintrainee"))
+//			.roles(ApplicationUserRole.ADMIN_TRAINEE.name())
+			.authorities(ApplicationUserRole.ADMINTRAINEE.getGrantedAuthorities())
+			.build();
+		
+		return new InMemoryUserDetailsManager(annaSmithUser, lindaUser, tomUser);
 	}
 	
 }
