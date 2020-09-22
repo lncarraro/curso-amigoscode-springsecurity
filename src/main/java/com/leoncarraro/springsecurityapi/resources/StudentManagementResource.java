@@ -3,6 +3,7 @@ package com.leoncarraro.springsecurityapi.resources;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,23 +22,27 @@ public class StudentManagementResource {
 		new Student(3L, "Anna Smith"));
 	
 	@RequestMapping(method = RequestMethod.GET)
+	@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_ADMINTRAINEE')")
 	public List<Student> findAll() {
 		return STUDENTS;
 	}
 	
 	@RequestMapping(method = RequestMethod.POST)
+	@PreAuthorize("hasAuthority('student:write')")
 	public void insert(@RequestBody Student student) {
 		System.out.println("Insert...");
 		System.out.println(student);
 	}
 	
 	@RequestMapping(method = RequestMethod.DELETE, value = "/{id}")
+	@PreAuthorize("hasAuthority('student:write')")
 	public void delete(@PathVariable Long id) {
 		System.out.println("Delete...");
 		System.out.println(id);
 	}
 	
 	@RequestMapping(method = RequestMethod.PUT, value = "/{id}")
+	@PreAuthorize("hasAuthority('student:write')")
 	public void update(@PathVariable Long id, @RequestBody Student student) {
 		System.out.println("Updating student " + id + " - " + student);
 	}
