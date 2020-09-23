@@ -6,7 +6,6 @@ public class Student {
 	private final String name;
 	
 	public Student(Long id, String name) {
-		super();
 		this.id = id;
 		this.name = name;
 	}
