@@ -13,6 +13,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.leoncarraro.springsecurityapi.auth.ApplicationUserService;
+import com.leoncarraro.springsecurityapi.jwt.JwtConfig;
+import com.leoncarraro.springsecurityapi.jwt.JwtSecretKey;
 import com.leoncarraro.springsecurityapi.jwt.JwtTokenVerifierFilter;
 import com.leoncarraro.springsecurityapi.jwt.JwtUsernameAndPasswordAuthenticationFilter;
 
@@ -21,6 +23,12 @@ import com.leoncarraro.springsecurityapi.jwt.JwtUsernameAndPasswordAuthenticatio
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
+	@Autowired
+	private JwtSecretKey jwtSecretKey;
+	
+	@Autowired
+	private JwtConfig jwtConfig;
+	
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 	
@@ -33,8 +41,8 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 			.sessionManagement()
 				.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 			.and()
-			.addFilter(new JwtUsernameAndPasswordAuthenticationFilter(authenticationManager()))
-			.addFilterAfter(new JwtTokenVerifierFilter(), JwtUsernameAndPasswordAuthenticationFilter.class)
+			.addFilter(new JwtUsernameAndPasswordAuthenticationFilter(authenticationManager(), jwtSecretKey, jwtConfig))
+			.addFilterAfter(new JwtTokenVerifierFilter(jwtSecretKey, jwtConfig), JwtUsernameAndPasswordAuthenticationFilter.class)
 			.authorizeRequests()
 				.antMatchers("/", "index", "/css/*", "/js/*").permitAll()
 				.antMatchers("/api/**").hasRole(ApplicationUserRole.STUDENT.name())

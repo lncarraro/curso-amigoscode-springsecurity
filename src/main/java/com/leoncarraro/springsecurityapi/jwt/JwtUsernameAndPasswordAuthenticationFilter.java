@@ -18,14 +18,22 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 
 public class JwtUsernameAndPasswordAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
+	private JwtSecretKey jwtSecretKey;
+	private JwtConfig jwtConfig;
+	
 	private AuthenticationManager authenticationManager;
 	
-	public JwtUsernameAndPasswordAuthenticationFilter(AuthenticationManager authenticationManager) {
+	public JwtUsernameAndPasswordAuthenticationFilter(
+		AuthenticationManager authenticationManager,
+		JwtSecretKey jwtSecretKey,
+		JwtConfig jwtConfig) {
+		
 		this.authenticationManager = authenticationManager;
+		this.jwtSecretKey = jwtSecretKey;
+		this.jwtConfig = jwtConfig;
 	}
 
 	@Override
@@ -52,16 +60,15 @@ public class JwtUsernameAndPasswordAuthenticationFilter extends UsernamePassword
 		FilterChain chain,
 		Authentication authResult) throws IOException, ServletException {
 		
-		String secretKey = ".twzGfLsBG^gfxe,'9($U>S~$du.}D\\ZhGc~NU{9%.udL_cQ#+P,yxB5Y{Ga4*3^B.<y:^pu^=-veR'!b#upttWJQ6BR^YN3vcMV";
 		String token = Jwts.builder()
 			.setSubject(authResult.getName())
 			.claim("authorities", authResult.getAuthorities())
 			.setIssuedAt(new Date())
-			.setExpiration(java.sql.Date.valueOf(LocalDate.now().plusDays(14)))
-			.signWith(Keys.hmacShaKeyFor(secretKey.getBytes()))
+			.setExpiration(java.sql.Date.valueOf(LocalDate.now().plusDays(jwtConfig.getTokenExpirationAfterDays())))
+			.signWith(jwtSecretKey.getSecretKey())
 			.compact();
 		
-		response.addHeader("Authorization", "Bearer " + token);
+		response.addHeader(jwtConfig.getAuthorizationHeader(), jwtConfig.getTokenPrefix() + token);
 	}
 	
 }

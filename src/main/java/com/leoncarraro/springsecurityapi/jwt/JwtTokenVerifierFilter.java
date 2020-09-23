@@ -23,9 +23,19 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 
 public class JwtTokenVerifierFilter extends OncePerRequestFilter {
+
+	private JwtSecretKey jwtSecretKey;
+	private JwtConfig jwtConfig;
+	
+	public JwtTokenVerifierFilter(
+		JwtSecretKey jwtSecretKey, 
+		JwtConfig jwtConfig) {
+		
+		this.jwtSecretKey = jwtSecretKey;
+		this.jwtConfig = jwtConfig;
+	}
 
 	@Override
 	protected void doFilterInternal(
@@ -33,18 +43,17 @@ public class JwtTokenVerifierFilter extends OncePerRequestFilter {
 		HttpServletResponse response, 
 		FilterChain filterChain) throws ServletException, IOException {
 		
-		String authorizationHeader = request.getHeader("Authorization");
-		if (Strings.isNullOrEmpty(authorizationHeader) || !authorizationHeader.startsWith("Bearer ")) {
+		String authorizationHeader = request.getHeader(jwtConfig.getAuthorizationHeader());
+		if (Strings.isNullOrEmpty(authorizationHeader) || !authorizationHeader.startsWith(jwtConfig.getTokenPrefix())) {
 			filterChain.doFilter(request, response);
 			return;
 		}
 		
 		try {
-			String token = authorizationHeader.replace("Bearer ", "");
-			String secretKey = ".twzGfLsBG^gfxe,'9($U>S~$du.}D\\ZhGc~NU{9%.udL_cQ#+P,yxB5Y{Ga4*3^B.<y:^pu^=-veR'!b#upttWJQ6BR^YN3vcMV";
+			String token = authorizationHeader.replace(jwtConfig.getTokenPrefix(), "");
 			
 			Jws<Claims> claimsJws = Jwts.parserBuilder()
-				.setSigningKey(Keys.hmacShaKeyFor(secretKey.getBytes()))
+				.setSigningKey(jwtSecretKey.getSecretKey())
 				.build()
 				.parseClaimsJws(token);
 			Claims body = claimsJws.getBody();
